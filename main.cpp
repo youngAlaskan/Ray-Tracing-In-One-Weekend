@@ -1,6 +1,8 @@
+#include "utils.h"
+
 #include "color.h"
-#include "ray.h"
-#include "vec3.h"
+#include "hittableList.h"
+#include "sphere.h"
 
 #include <iostream>
 
@@ -17,27 +19,11 @@
 //     Author : Daniel Young
 //     Version: Mar 23, 2023
 
-bool hitSphere(const point3& center, double radius, const ray& r) {
-    // Equation for the intersection of a sphere and a ray:
-    //     t^2 * b^2 + 2 * t * b * (a - c) + (a - c)^2 - r^2 = 0
-    // Where we have a...
-    //   - ray   : a + t * b
-    //   - center: c
-    //   - radius: r
-    // to solve we use the quadratic formula.
+color rayColor(const ray& ray, const hittableList& entities) {
+    hitRecord record;
+    if (entities.hit(ray, 0.0, infinity, record)) return 0.5 * (record.normal + color(1.0, 1.0, 1.0));
 
-    vec3 oc = r.getOrigin() - center;
-    double a = dot(r.getDirection(), r.getDirection());
-    double b = 2.0 * dot(oc, r.getDirection());
-    double c = dot(oc, oc) - radius * radius;
-    double discriminant = b * b - 4 * a * c;
-    return (discriminant > 0);
-}
-
-color rayColor(const ray& r) {
-    if (hitSphere(point3(0.0, 0.0, -1.0), 0.5, r))
-        return color(1.0, 0.0, 0.0);
-    vec3 unitDirection = unitVector(r.getDirection());
+    vec3 unitDirection = unitVector(ray.getDirection());
     double t = 0.5 * (unitDirection.y() + 1.0);
     return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
@@ -50,6 +36,11 @@ int main() {
     const int imageWidth = 400;
     const int imageHeight = static_cast<int>(double(imageWidth) / aspectRatio);
 
+    // Entities
+    hittableList entities;
+    entities.add(make_shared<sphere>(point3(0.0, 0.0, -1.0), 0.5));
+    entities.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0));
+    
     // Camera
 
     double viewportHeight = 2.0;
@@ -71,7 +62,7 @@ int main() {
             double u = double(column) / (imageWidth - 1);
             double v = double(row) / (imageHeight - 1);
             ray r(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
-            color pixelColor = rayColor(r);
+            color pixelColor = rayColor(r, entities);
             writeColor(std::cout, pixelColor);
         }
     }

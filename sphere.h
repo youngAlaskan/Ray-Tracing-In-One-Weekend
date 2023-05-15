@@ -5,7 +5,7 @@
 
 class sphere : public hittable {
 public:
-	sphere() {}
+    sphere() : m_center(vec3(0.0, 0.0, 0.0)), m_radius(0.0) {}
 	sphere(point3 center, double r) : m_center(center), m_radius(r) {};
 
 	virtual bool hit(const ray& r, double tMin, double tMax, hitRecord& record) const override;
@@ -15,10 +15,10 @@ private:
 	double m_radius;
 };
 
-bool sphere::hit(const ray& r, double tMin, double tMax, hitRecord& record) const {
-	vec3 oc = r.getOrigin() - m_center;
-	double a = r.getDirection().lengthSquared();
-    double half_b = dot(oc, r.getDirection());
+bool sphere::hit(const ray& ray, double tMin, double tMax, hitRecord& record) const {
+	vec3 oc = ray.getOrigin() - m_center;
+	double a = ray.getDirection().lengthSquared();
+    double half_b = dot(oc, ray.getDirection());
     double c = oc.lengthSquared() - m_radius * m_radius;
 
     double discriminant = half_b * half_b - a * c;
@@ -34,8 +34,9 @@ bool sphere::hit(const ray& r, double tMin, double tMax, hitRecord& record) cons
     }
 
     record.t = root;
-    record.point = r.resize(record.t);
-    record.normal = (record.point - m_center) / m_radius;
+    record.point = ray.resize(record.t);
+    vec3 outwardNormal = (record.point - m_center) / m_radius;
+    record.setFaceNormal(ray, outwardNormal);
 
     return true;
 }
