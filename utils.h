@@ -21,9 +21,17 @@ inline double degreesToRadians(double degrees) {
 }
 
 inline double randomDouble() {
+	// C++ style random generation
 	static std::uniform_real_distribution<double> distribution(0.0, 1.0);
 	static std::mt19937 generator;
 	return distribution(generator);
+	
+	// C style random generation
+	// return std::rand() / (RAND_MAX + 1.0);
+}
+
+inline double randomDouble(double min, double max) {
+	return min + (max - min) * randomDouble();
 }
 
 inline double clamp(double val, double min, double max) {

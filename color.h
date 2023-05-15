@@ -16,11 +16,11 @@ void writeColor(std::ostream& out, color pixelColor, int samplesPerPixel) {
     double green = pixelColor.y();
     double blue = pixelColor.z();
 
-    // Divide the color by the number of smaples.
+    // Divide the color by the number of smaples and gamma-correct for gamma = 2.0.
     double scale = 1.0 / samplesPerPixel;
-    red *= scale;
-    green *= scale;
-    blue *= scale;
+    red = sqrt(scale * red);
+    green = sqrt(scale * green);
+    blue = sqrt(scale * blue);
 
     // Write the translated [0, 255] value of each color component.
     out << static_cast<int>(256 * clamp(red, 0.0, 0.999)) << ' '

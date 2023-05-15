@@ -20,11 +20,18 @@
 //     Author : Daniel Young
 //     Version: Mar 23, 2023
 
-color rayColor(const ray& ray, const hittableList& entities) {
+color rayColor(const ray& r, const hittableList& entities, int depth) {
     hitRecord record;
-    if (entities.hit(ray, 0.0, infinity, record)) return 0.5 * (record.normal + color(1.0, 1.0, 1.0));
 
-    vec3 unitDirection = unitVector(ray.getDirection());
+    // Base Case
+    if (depth <= 0) return color(0.0, 0.0, 0.0);
+
+    if (entities.hit(r, 0.001, infinity, record)) {
+        point3 target = record.point + record.normal + randomUnitVector();
+        return 0.5 * rayColor(ray(record.point, target - record.point), entities, depth - 1);
+    }
+
+    vec3 unitDirection = unitVector(r.getDirection());
     double t = 0.5 * (unitDirection.y() + 1.0);
     return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
 }
@@ -37,6 +44,7 @@ int main() {
     const int imageWidth = 400;
     const int imageHeight = static_cast<int>(double(imageWidth) / aspectRatio);
     const int samplesPerPixel = 100;
+    const int maxDepth = 50;
 
     // Entities
     hittableList entities;
@@ -55,10 +63,10 @@ int main() {
         for (int column = 0; column < imageWidth; ++column) {
             color pixelColor(0.0, 0.0, 0.0);
             for (int s = 0; s < samplesPerPixel; s++) {
-                double u = double(column) / (imageWidth - 1);
-                double v = double(row) / (imageHeight - 1);
-                ray ray = camera.getRay(u, v);
-                pixelColor += rayColor(ray, entities);
+                double u = (double(column) + randomDouble()) / (imageWidth - 1);
+                double v = (double(row) + randomDouble()) / (imageHeight - 1);
+                ray r = camera.getRay(u, v);
+                pixelColor += rayColor(r, entities, maxDepth);
             }
             writeColor(std::cout, pixelColor, samplesPerPixel);
         }
