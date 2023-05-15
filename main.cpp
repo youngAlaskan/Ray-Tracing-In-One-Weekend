@@ -1,6 +1,7 @@
 #include "utils.h"
 
 #include "color.h"
+#include "camera.h"
 #include "hittableList.h"
 #include "sphere.h"
 
@@ -35,6 +36,7 @@ int main() {
     const double aspectRatio = 16.0 / 9.0;
     const int imageWidth = 400;
     const int imageHeight = static_cast<int>(double(imageWidth) / aspectRatio);
+    const int samplesPerPixel = 100;
 
     // Entities
     hittableList entities;
@@ -42,15 +44,7 @@ int main() {
     entities.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0));
     
     // Camera
-
-    double viewportHeight = 2.0;
-    double viewportWidth = aspectRatio * viewportHeight;
-    double focalLength = 1.0;
-
-    point3 origin = point3(0.0, 0.0, 0.0);
-    vec3 horizontal = vec3(viewportWidth, 0.0, 0.0);
-    vec3 vertical = vec3(0.0, viewportHeight, 0.0);
-    vec3 lowerLeftCorner = origin - (horizontal + vertical) * 0.5 - vec3(0, 0, focalLength);
+    camera camera;
 
     // Render
 
@@ -59,11 +53,14 @@ int main() {
     for (int row = imageHeight - 1; row >= 0; --row) {
         std::cerr << "\rScanlines remaining: " << row << ' ' << std::flush;
         for (int column = 0; column < imageWidth; ++column) {
-            double u = double(column) / (imageWidth - 1);
-            double v = double(row) / (imageHeight - 1);
-            ray r(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
-            color pixelColor = rayColor(r, entities);
-            writeColor(std::cout, pixelColor);
+            color pixelColor(0.0, 0.0, 0.0);
+            for (int s = 0; s < samplesPerPixel; s++) {
+                double u = double(column) / (imageWidth - 1);
+                double v = double(row) / (imageHeight - 1);
+                ray ray = camera.getRay(u, v);
+                pixelColor += rayColor(ray, entities);
+            }
+            writeColor(std::cout, pixelColor, samplesPerPixel);
         }
     }
 
