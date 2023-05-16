@@ -1,10 +1,13 @@
 #pragma once
 
-#include "ray.h"
+#include "utils.h"
+
+#include "material.h"
 
 struct hitRecord {
 	point3 point;
 	vec3 normal;
+	shared_ptr<material> material_ptr;
 	double t;
 	bool isFrontFace;
 

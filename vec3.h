@@ -52,6 +52,11 @@ public:
         return vec3(randomDouble(min, max), randomDouble(min, max), randomDouble(min, max));
     }
 
+    inline bool nearZero() const {
+        const double epsilon = 1e-8;
+        return (abs(m_e[0]) < epsilon) && (abs(m_e[1]) < epsilon) && (abs(m_e[2]) < epsilon);
+    }
+
 public:
     double m_e[3];
 };
@@ -104,6 +109,10 @@ inline vec3 cross(const vec3& u, const vec3& v) {
 
 inline vec3 unitVector(vec3 v) {
     return v / v.length();
+}
+
+inline vec3 reflect(const vec3& vector, const vec3& normal) {
+    return vector - 2 * dot(vector, normal) * normal;
 }
 
 inline vec3 randomInUnitSphere() {
