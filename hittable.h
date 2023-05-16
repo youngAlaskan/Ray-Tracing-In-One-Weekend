@@ -12,7 +12,7 @@ struct hitRecord {
 	bool isFrontFace;
 
 	inline void setFaceNormal(const ray& ray, const vec3& outwardNormal) {
-		isFrontFace = dot(ray.getDirection(), outwardNormal);
+		isFrontFace = dot(ray.getDirection(), outwardNormal) < 0.0;
 		normal = isFrontFace ? outwardNormal : -outwardNormal;
 	}
 };

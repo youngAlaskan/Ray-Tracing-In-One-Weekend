@@ -31,7 +31,7 @@ color rayColor(const ray& r, const hittableList& entities, int depth) {
     if (entities.hit(r, 0.001, infinity, record)) {
         ray scattered;
         color attenuation;
-        if (record.material_ptr->scatter(r, record.point, record.normal, attenuation, scattered)) {
+        if (record.material_ptr->scatter(r, record.point, record.normal, record.isFrontFace, attenuation, scattered)) {
             return attenuation * rayColor(scattered, entities, depth - 1);
         }
         return color(0.0, 0.0, 0.0);
@@ -55,14 +55,15 @@ int main() {
     // Entities
     hittableList entities;
     
-    auto materialGround = make_shared<lambertian>(color(0.8, 0.8, 0.0));
-    auto materialCenter = make_shared<lambertian>(color(0.7, 0.3, 0.3));
-    auto materialLeft = make_shared<metal>(color(0.8, 0.8, 0.8), 0.3);
-    auto materialRight = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
+    shared_ptr<lambertian> materialGround = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+    shared_ptr<lambertian> materialCenter = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+    shared_ptr<dielectric> materialLeft   = make_shared<dielectric>(1.5);
+    shared_ptr<metal> materialRight       = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
 
     entities.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0, materialGround));
     entities.add(make_shared<sphere>(point3(0.0, 0.0, -1.0), 0.5, materialCenter));
     entities.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.5, materialLeft));
+    entities.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), -0.4, materialLeft));
     entities.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, materialRight));
 
     // Camera

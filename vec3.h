@@ -115,6 +115,19 @@ inline vec3 reflect(const vec3& vector, const vec3& normal) {
     return vector - 2 * dot(vector, normal) * normal;
 }
 
+inline vec3 refract(const vec3& uv, const vec3& normal, double coeff) {
+    double cosTheta = fmin(dot(-uv, normal), 1.0);
+    vec3 perpR = coeff * (uv + cosTheta * normal);
+    vec3 parallelR = -sqrt(fabs(1.0 - perpR.lengthSquared())) * normal;
+    return perpR + parallelR;
+}
+
+inline vec3 refract(const vec3& uv, const vec3& normal, double cosTheta, double coeff) {
+    vec3 perpR = coeff * (uv + cosTheta * normal);
+    vec3 parallelR = -sqrt(fabs(1.0 - perpR.lengthSquared())) * normal;
+    return perpR + parallelR;
+}
+
 inline vec3 randomInUnitSphere() {
     while (true) {
         vec3 point = vec3::random(-1.0, 1.0);
