@@ -53,21 +53,22 @@ int main() {
     const int maxDepth = 50;
 
     // Entities
+    double R = cos(pi / 4.0);
     hittableList entities;
-    
-    shared_ptr<lambertian> materialGround = make_shared<lambertian>(color(0.8, 0.8, 0.0));
-    shared_ptr<lambertian> materialCenter = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-    shared_ptr<dielectric> materialLeft   = make_shared<dielectric>(1.5);
-    shared_ptr<metal> materialRight       = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+
+    auto materialGround = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+    auto materialCenter = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+    auto materialLeft = make_shared<dielectric>(1.5);
+    auto materialRight = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
 
     entities.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0, materialGround));
     entities.add(make_shared<sphere>(point3(0.0, 0.0, -1.0), 0.5, materialCenter));
     entities.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.5, materialLeft));
-    entities.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), -0.4, materialLeft));
+    entities.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), -0.45, materialLeft));
     entities.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, materialRight));
 
     // Camera
-    camera camera;
+    camera camera(point3(-2.0, 2.0, 1.0), point3(0.0, 0.0, -1.0), vec3(0, 1, 0),  20.0, aspectRatio);
 
     // Render
 
