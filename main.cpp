@@ -68,7 +68,13 @@ int main() {
     entities.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, materialRight));
 
     // Camera
-    camera camera(point3(-2.0, 2.0, 1.0), point3(0.0, 0.0, -1.0), vec3(0, 1, 0),  20.0, aspectRatio);
+    point3 lookFrom(3.0, 3.0, 2.0);
+    point3 lookAt(0.0, 0.0, -1.0);
+    vec3 vUp(0.0, 1.0, 0.0);
+    double focusDistance = (lookFrom - lookAt).length();
+    double aperture = 2.0;
+    
+    camera camera(lookFrom, lookAt, vUp, 20.0, aspectRatio, aperture, focusDistance);
 
     // Render
 

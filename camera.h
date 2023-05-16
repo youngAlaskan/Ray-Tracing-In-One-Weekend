@@ -9,30 +9,41 @@ public:
 		point3 lookAt,
 		vec3 vUp,
 		double vFovDegrees,
-		double aspectRatio
+		double aspectRatio,
+		double aperture,
+		double focusDistance
 	) {
 		double theta = degreesToRadians(vFovDegrees);
 		double h = tan(theta / 2.0);
 		double viewportHeight = 2.0 * h;
 		double viewportWidth = aspectRatio * viewportHeight;
 
-		vec3 w = unitVector(lookFrom - lookAt);
-		vec3 u = unitVector(cross(vUp, w));
-		vec3 v = cross(w, u);
+		m_w = unitVector(lookFrom - lookAt);
+		m_u = unitVector(cross(vUp, m_w));
+		m_v = cross(m_w, m_u);
 
-		origin = lookFrom;
-		horizontal = viewportWidth * u;
-		vertical = viewportHeight * v;
-		lowerLeftCorner = origin - horizontal / 2.0 - vertical / 2.0 - w;
+		m_origin = lookFrom;
+		m_horizontal = focusDistance * viewportWidth * m_u;
+		m_vertical = focusDistance * viewportHeight * m_v;
+		m_lowerLeftCorner = m_origin - m_horizontal / 2.0 - m_vertical / 2.0 - focusDistance * m_w;
+	
+		m_lensRadius = aperture / 2.0;
 	}
 
 	ray getRay(double s, double t) const {
-		return ray(origin, lowerLeftCorner + s * horizontal + t * vertical - origin);
+		vec3 rd = m_lensRadius * randomInUnitDisk();
+		vec3 offset = m_u * rd.x() + m_v * rd.y();
+
+		return ray(
+			m_origin + offset, m_lowerLeftCorner + s * m_horizontal + t * m_vertical - m_origin - offset
+		);
 	}
 
 private:
-	point3 origin;
-	point3 lowerLeftCorner;
-	vec3 horizontal;
-	vec3 vertical;
+	point3 m_origin;
+	point3 m_lowerLeftCorner;
+	vec3 m_horizontal;
+	vec3 m_vertical;
+	vec3 m_u, m_v, m_w;
+	double m_lensRadius;
 };

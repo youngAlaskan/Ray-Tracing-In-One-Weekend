@@ -145,3 +145,11 @@ inline vec3 randomInHemisphere(const vec3& normal) {
     vec3 inUnitSphere = randomInUnitSphere();
     return dot(inUnitSphere, normal) > 0.0 ? inUnitSphere : -inUnitSphere;
 }
+
+inline vec3 randomInUnitDisk() {
+    while (true) {
+        vec3 point = vec3(randomDouble(-1.0, 1.0), randomDouble(-1.0, 1.0), 0.0);
+        if (point.lengthSquared() >= 1) continue;
+        return point;
+    }
+}
