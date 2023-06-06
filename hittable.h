@@ -8,8 +8,8 @@ struct hitRecord {
 	point3 point;
 	vec3 normal;
 	shared_ptr<material> material_ptr;
-	double t;
-	bool isFrontFace;
+	double t = 0.0;
+	bool isFrontFace = true;
 
 	inline void setFaceNormal(const ray& ray, const vec3& outwardNormal) {
 		isFrontFace = dot(ray.getDirection(), outwardNormal) < 0.0;

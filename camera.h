@@ -11,7 +11,9 @@ public:
 		double vFovDegrees,
 		double aspectRatio,
 		double aperture,
-		double focusDistance
+		double focusDistance,
+		double startTime = 0.0,
+		double endTime = 0.0
 	) {
 		double theta = degreesToRadians(vFovDegrees);
 		double h = tan(theta / 2.0);
@@ -28,6 +30,8 @@ public:
 		m_lowerLeftCorner = m_origin - m_horizontal / 2.0 - m_vertical / 2.0 - focusDistance * m_w;
 	
 		m_lensRadius = aperture / 2.0;
+		m_startTime = startTime;
+		m_endTime = endTime;
 	}
 
 	ray getRay(double s, double t) const {
@@ -35,7 +39,9 @@ public:
 		vec3 offset = m_u * rd.x() + m_v * rd.y();
 
 		return ray(
-			m_origin + offset, m_lowerLeftCorner + s * m_horizontal + t * m_vertical - m_origin - offset
+			m_origin + offset,
+			m_lowerLeftCorner + s * m_horizontal + t * m_vertical - m_origin - offset,
+			randomDouble(m_startTime, m_endTime)
 		);
 	}
 
@@ -46,4 +52,5 @@ private:
 	vec3 m_vertical;
 	vec3 m_u, m_v, m_w;
 	double m_lensRadius;
+	double m_startTime, m_endTime; // Shutter open, close times
 };

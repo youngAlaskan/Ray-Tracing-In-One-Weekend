@@ -6,18 +6,19 @@
 #include "hittable.h"
 #include "hittableList.h"
 #include "sphere.h"
+#include "movingSphere.h"
 
 #include <iostream>
 
 // This code follows the Ray Tracing In a Weekend Book cited below.
-//     Title (series)    : “Ray Tracing in One Weekend Series”
-//     Title (book)      : “Ray Tracing in One Weekend”
-//     Author            : Peter Shirley
-//     Editors           : Steve Hollasch, Trevor David Black
+//     Title(series) : “Ray Tracing in One Weekend Series”
+//     Title(book) : “Ray Tracing : The Next Week”
+//     Author : Peter Shirley
+//     Editors : Steve Hollasch, Trevor David Black
 //     Version / Edition : v3.2.3
-//     Date              : 2020 - 12 - 07
-//     URL(series)       : https://raytracing.github.io/
-//     URL(book)         : https://raytracing.github.io/books/RayTracingInOneWeekend.html
+//     Date : 2020 - 12 - 07
+//     URL(series) : https ://raytracing.github.io/
+//     URL(book) : https ://raytracing.github.io/books/RayTracingTheNextWeek.html
 // ---------------------------------------------------------------------------------------
 //     Author : Daniel Young
 //     Version: Mar 23, 2023
@@ -40,7 +41,8 @@ hittableList randomScene() {
                     // diffuse
                     auto albedo = color::random() * color::random();
                     sphereMaterial = make_shared<lambertian>(albedo);
-                    entities.add(make_shared<sphere>(center, 0.2, sphereMaterial));
+                    point3 endCenter = center + vec3(0.0, randomDouble(0, 0.5), 0.0);
+                    entities.add(make_shared<movingSphere>(center, endCenter, 0.0, 1.0, 0.2, sphereMaterial));
                 }
                 else if (choose_mat < 0.95) {
                     // metal
@@ -79,6 +81,9 @@ color rayColor(const ray& r, const hittableList& entities, int depth) {
     if (entities.hit(r, 0.001, infinity, record)) {
         ray scattered;
         color attenuation;
+        if (record.material_ptr == nullptr) {
+            int q = 0;
+        }
         if (record.material_ptr->scatter(r, record.point, record.normal, record.isFrontFace, attenuation, scattered)) {
             return attenuation * rayColor(scattered, entities, depth - 1);
         }
@@ -94,11 +99,11 @@ int main() {
 
     // Image
 
-    const double aspectRatio = 3.0 / 2.0;
-    const int imageWidth = 1200;
+    const double aspectRatio = 16.0 / 9.0;
+    const int imageWidth = 400;
     const int imageHeight = static_cast<int>(double(imageWidth) / aspectRatio);
     const int samplesPerPixel = 100;
-    const int maxDepth = 20;
+    const int maxDepth = 50;
 
     // Entities
     
@@ -111,13 +116,16 @@ int main() {
     double focusDistance = 10.0;
     double aperture = 0.1;
     
-    camera camera(lookFrom, lookAt, vUp, 20.0, aspectRatio, aperture, focusDistance);
+    camera camera(lookFrom, lookAt, vUp, 20.0, aspectRatio, aperture, focusDistance, 0.0, 1.0);
 
     // Render
 
     std::cout << "P3\n" << imageWidth << ' ' << imageHeight << "\n255\n";
 
     for (int row = imageHeight - 1; row >= 0; --row) {
+        if (row == 207) {
+            int q = 0;
+        }
         std::cerr << "\rScanlines remaining: " << row << ' ' << std::flush;
         for (int column = 0; column < imageWidth; ++column) {
             color pixelColor(0.0, 0.0, 0.0);

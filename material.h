@@ -20,7 +20,7 @@ public:
 
 		if (scatterDir.nearZero()) scatterDir = normal;
 
-		scattered = ray(point, scatterDir);
+		scattered = ray(point, scatterDir, inRay.getTime());
 		attenuation = m_albedo;
 		return true;
 	}
@@ -37,7 +37,7 @@ public:
 		const ray& inRay, const point3& point, const vec3& normal, const bool& isFrontFace, color& attenuation, ray& scattered
 	) const override {
 		vec3 reflected = reflect(unitVector(inRay.getDirection()), normal);
-		scattered = ray(point, reflected + m_reflectionFuzz * randomInUnitSphere());
+		scattered = ray(point, reflected + m_reflectionFuzz * randomInUnitSphere(), inRay.getTime());
 		attenuation = m_albedo;
 		return dot(scattered.getDirection(), normal) > 0.0;
 	}
@@ -65,7 +65,7 @@ public:
 		vec3 direction = cannotRefract || reflectance(cosTheta, refractionRatio) > randomDouble() ?
 			reflect(unitDir, normal) : refract(unitDir, normal, cosTheta, refractionRatio);
 
-		scattered = ray(point, direction);
+		scattered = ray(point, direction, inRay.getTime());
 		
 		return true;
 	}

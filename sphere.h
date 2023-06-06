@@ -16,10 +16,10 @@ public:
     shared_ptr<material> m_material_ptr;
 };
 
-bool sphere::hit(const ray& ray, double tMin, double tMax, hitRecord& record) const {
-	vec3 oc = ray.getOrigin() - m_center;
-	double a = ray.getDirection().lengthSquared();
-    double half_b = dot(oc, ray.getDirection());
+bool sphere::hit(const ray& r, double tMin, double tMax, hitRecord& record) const {
+	vec3 oc = r.getOrigin() - m_center;
+	double a = r.getDirection().lengthSquared();
+    double half_b = dot(oc, r.getDirection());
     double c = oc.lengthSquared() - m_radius * m_radius;
 
     double discriminant = half_b * half_b - a * c;
@@ -35,9 +35,9 @@ bool sphere::hit(const ray& ray, double tMin, double tMax, hitRecord& record) co
     }
 
     record.t = root;
-    record.point = ray.resize(record.t);
+    record.point = r.resize(record.t);
     vec3 outwardNormal = (record.point - m_center) / m_radius;
-    record.setFaceNormal(ray, outwardNormal);
+    record.setFaceNormal(r, outwardNormal);
     record.material_ptr = m_material_ptr;
 
     return true;
