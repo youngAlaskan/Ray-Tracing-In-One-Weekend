@@ -32,7 +32,7 @@ hittableList randomScene() {
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
             auto choose_mat = randomDouble();
-            point3 center(a + 0.9 * randomDouble(), 0.2, b + 0.9 * randomDouble());
+            point3 center(double(a) + 0.9 * randomDouble(), 0.2, double(b) + 0.9 * randomDouble());
 
             if ((center - point3(4.0, 0.2, 0.0)).length() > 0.9) {
                 shared_ptr<material> sphereMaterial;

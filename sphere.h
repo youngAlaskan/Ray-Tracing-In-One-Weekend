@@ -9,7 +9,7 @@ public:
         : m_center(center), m_radius(r), m_material_ptr(material_ptr) {};
 
 	virtual bool hit(const ray& r, double tMin, double tMax, hitRecord& record) const override;
-
+    virtual bool getAABB(double startTime, double endTime, aabb& outputBox) const override;
 public:
 	point3 m_center;
 	double m_radius;
@@ -39,6 +39,15 @@ bool sphere::hit(const ray& r, double tMin, double tMax, hitRecord& record) cons
     vec3 outwardNormal = (record.point - m_center) / m_radius;
     record.setFaceNormal(r, outwardNormal);
     record.material_ptr = m_material_ptr;
+
+    return true;
+}
+
+bool sphere::getAABB(double startTime, double endTime, aabb& outputBox) const {
+    outputBox = aabb(
+        m_center - vec3(m_radius, m_radius, m_radius),
+        m_center + vec3(m_radius, m_radius, m_radius)
+    );
 
     return true;
 }

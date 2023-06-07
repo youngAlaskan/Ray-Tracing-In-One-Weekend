@@ -1,21 +1,29 @@
 #pragma once
 
-#include"hittable.h"
+#include "hittable.h"
+#include "aabb.h"
 
-#include<memory>
-#include<vector>
+#include <memory>
+#include <vector>
 
 class hittableList : public hittable {
-public:
-	std::vector<std::shared_ptr<hittable>> objects;
 public:
 	hittableList() {}
 	hittableList(std::shared_ptr<hittable> object) { add(object); }
 
-	void clear() { objects.clear(); }
-	void add(std::shared_ptr<hittable> object) { objects.push_back(object); }
+	void clear() { m_objects.clear(); }
+	void add(std::shared_ptr<hittable> object) { m_objects.push_back(object); }
 
-	virtual bool hit(const ray& ray, double tMin, double tMax, hitRecord& record) const override;
+	virtual bool hit(
+		const ray& ray, double tMin, double tMax, hitRecord& record
+	) const override;
+
+	virtual bool getAABB(
+		double startTime, double endTime, aabb& outputBox
+	) const override;
+
+public:
+	std::vector<std::shared_ptr<hittable>> m_objects;
 };
 
 bool hittableList::hit(const ray& ray, double tMin, double tMax, hitRecord& record) const {
@@ -23,7 +31,7 @@ bool hittableList::hit(const ray& ray, double tMin, double tMax, hitRecord& reco
 	bool hasHit = false;
 	double currentClosest = tMax;
 
-	for (const std::shared_ptr<hittable>& object : objects) {
+	for (const std::shared_ptr<hittable>& object : m_objects) {
 		if (object->hit(ray, tMin, currentClosest, tempRecord)) {
 			hasHit = true;
 			currentClosest = tempRecord.t;
@@ -32,4 +40,19 @@ bool hittableList::hit(const ray& ray, double tMin, double tMax, hitRecord& reco
 	}
 
 	return hasHit;
+}
+
+bool hittableList::getAABB(double startTime, double endTime, aabb& outputBox) const {
+	if (m_objects.empty()) return false;
+
+	aabb tempBox;
+	bool firstBox = true;
+
+	for (const auto& object : m_objects) {
+		if (!object->getAABB(startTime, endTime, tempBox)) return false;
+		outputBox = firstBox ? tempBox : aabb::surroundingBox(outputBox, tempBox);
+		firstBox = false;
+	}
+
+	return true;
 }

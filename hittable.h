@@ -3,6 +3,7 @@
 #include "utils.h"
 
 #include "material.h"
+#include "aabb.h"
 
 struct hitRecord {
 	point3 point;
@@ -20,4 +21,5 @@ struct hitRecord {
 class hittable {
 public:
 	virtual bool hit(const ray& ray, double tMin, double tMax, hitRecord& record) const = 0;
+	virtual bool getAABB(double startTime, double endTime, aabb& outputBox) const = 0;
 };
