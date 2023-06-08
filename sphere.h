@@ -10,10 +10,27 @@ public:
 
 	virtual bool hit(const ray& r, double tMin, double tMax, hitRecord& record) const override;
     virtual bool getAABB(double startTime, double endTime, aabb& outputBox) const override;
+
 public:
 	point3 m_center;
 	double m_radius;
     shared_ptr<material> m_material_ptr;
+
+private:
+    static void getUV(const point3& p, double& u, double& v) {
+        // p: a given point on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+        auto theta = acos(-p.y());
+        auto phi = atan2(-p.z(), p.x()) + pi;
+
+        u = phi / (2 * pi);
+        v = theta / pi;
+    }
 };
 
 bool sphere::hit(const ray& r, double tMin, double tMax, hitRecord& record) const {
@@ -38,6 +55,7 @@ bool sphere::hit(const ray& r, double tMin, double tMax, hitRecord& record) cons
     record.point = r.resize(record.t);
     vec3 outwardNormal = (record.point - m_center) / m_radius;
     record.setFaceNormal(r, outwardNormal);
+    getUV(outwardNormal, record.u, record.v);
     record.material_ptr = m_material_ptr;
 
     return true;

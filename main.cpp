@@ -26,8 +26,8 @@
 hittableList randomScene() {
     hittableList entities;
 
-    auto groundMaterial = make_shared<lambertian>(color(0.5, 0.5, 0.5));
-    entities.add(make_shared<sphere>(point3(0.0, -1000.0, 0.0), 1000.0, groundMaterial));
+    auto checker = make_shared<checkerTexture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+    entities.add(make_shared<sphere>(point3(0.0, -1000.0, 0.0), 1000.0, make_shared<lambertian>(checker)));
 
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
@@ -72,6 +72,27 @@ hittableList randomScene() {
     return entities;
 }
 
+hittableList twoSpheres() {
+    hittableList entities;
+
+    auto checker = make_shared<checkerTexture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+
+    entities.add(make_shared<sphere>(point3(0.0, -10.0, 0.0), 10, make_shared<lambertian>(checker)));
+    entities.add(make_shared<sphere>(point3(0.0, 10.0, 0.0), 10, make_shared<lambertian>(checker)));
+
+    return entities;
+}
+
+hittableList twoPerlinSpheres() {
+    hittableList entities;
+
+    auto perlinTex = make_shared<perlinTexture>(4.0);
+    entities.add(make_shared<sphere>(point3(0.0, -1000.0, 0.0), 1000, make_shared<lambertian>(perlinTex)));
+    entities.add(make_shared<sphere>(point3(0.0, 2.0, 0.0), 2, make_shared<lambertian>(perlinTex)));
+
+    return entities;
+}
+
 color rayColor(const ray& r, const hittableList& entities, int depth) {
     hitRecord record;
 
@@ -84,7 +105,8 @@ color rayColor(const ray& r, const hittableList& entities, int depth) {
         if (record.material_ptr == nullptr) {
             int q = 0;
         }
-        if (record.material_ptr->scatter(r, record.point, record.normal, record.isFrontFace, attenuation, scattered)) {
+        if (record.material_ptr->scatter(r, record.point, record.normal,
+            record.isFrontFace, record.u, record.v, attenuation, scattered)) {
             return attenuation * rayColor(scattered, entities, depth - 1);
         }
         return color(0.0, 0.0, 0.0);
@@ -107,16 +129,43 @@ int main() {
 
     // Entities
     
-    hittableList entities = randomScene();
+    hittableList entities;
+
+    point3 lookFrom;
+    point3 lookAt;
+    double vFOV = 0.0;
+    double aperture = 0.0;
+
+    switch (3) {
+    case 1:
+        entities = randomScene();
+        lookFrom = point3(13.0, 2.0, 3.0);
+        lookAt = point3(0.0, 0.0, 0.0);
+        vFOV = 20.0;
+        aperture = 0.1;
+        break;
+    case 2:
+        entities = twoSpheres();
+        lookFrom = point3(13.0, 2.0, 3.0);
+        lookAt = point3(0.0, 0.0, 0.0);
+        vFOV = 20.0;
+        break;
+    case 3:
+        entities = twoPerlinSpheres();
+        lookFrom = point3(13.0, 2.0, 3.0);
+        lookAt = point3(0.0, 0.0, 0.0);
+        vFOV = 20.0;
+        break;
+    default:
+        break;
+    }
     
     // Camera
-    point3 lookFrom(13.0, 2.0, 3.0);
-    point3 lookAt(0.0, 0.0, 0.0);
+
     vec3 vUp(0.0, 1.0, 0.0);
     double focusDistance = 10.0;
-    double aperture = 0.1;
-    
-    camera camera(lookFrom, lookAt, vUp, 20.0, aspectRatio, aperture, focusDistance, 0.0, 1.0);
+
+    camera camera(lookFrom, lookAt, vUp, vFOV, aspectRatio, aperture, focusDistance, 0.0, 1.0);
 
     // Render
 

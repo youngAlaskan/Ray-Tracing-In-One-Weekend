@@ -22,21 +22,7 @@ public:
 		return aabb(small, big);
 	}
 
-	bool hit(const ray& r, double tMin, double tMax) const {
-		for (int i = 0; i < 3; i++) {
-			double element = r.getOrigin()[i];
-			double direction = r.getDirection()[i];
-			double tClose = fmin((m_min[i] - element) / direction,
-				(m_max[i] - element) / direction);
-			double tFar = fmax((m_min[i] - element) / direction,
-				(m_max[i] - element) / direction);
-			tMin = fmax(tClose, tMin);
-			tMax = fmin(tFar, tMax);
-			if (tMax <= tMin) return false;
-		}
-
-		return true;
-	}
+	bool hit(const ray& r, double tMin, double tMax) const;
 
 public:
 	point3 m_min;

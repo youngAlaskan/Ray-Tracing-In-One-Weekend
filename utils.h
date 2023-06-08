@@ -44,6 +44,13 @@ inline double clamp(double val, double min, double max) {
 	return val;
 }
 
+inline double linearInterpolation(double a, double b, double fraction) {
+	if (fraction < 0.0) fraction = -fraction;
+	if (fraction > 1.0) fraction -= floor(fraction);
+
+	return fmin(abs(a),abs(b)) * (1.0 - fraction) + fmax(abs(a), abs(b)) * fraction;
+}
+
 // Common Headers
 
 #include "ray.h"

@@ -1,32 +1,35 @@
 #pragma once
 
 #include "utils.h"
+#include "texture.h"
 
 class material {
 public:
 	virtual bool scatter(
-		const ray& inRay, const point3& point, const vec3& normal, const bool& isFrontFace, color& attenuation, ray& scattered
+		const ray& inRay, const point3& point, const vec3& normal, const bool& isFrontFace, double u, double v, color& attenuation, ray& scattered
 	) const = 0;
 };
 
 class lambertian : public material {
 public:
-	lambertian(const color& albedo) : m_albedo(albedo) {}
+	lambertian(const color& albedo) : m_albedo(make_shared<solidColor>(albedo)) {}
+	lambertian(shared_ptr<texture> albedo) : m_albedo(albedo) {}
 
 	virtual bool scatter(
-		const ray& inRay, const point3& point, const vec3& normal, const bool& isFrontFace, color& attenuation, ray& scattered
+		const ray& inRay, const point3& point, const vec3& normal,
+		const bool& isFrontFace, double u, double v, color& attenuation, ray& scattered
 	) const override {
 		vec3 scatterDir = normal + randomUnitVector();
 
 		if (scatterDir.nearZero()) scatterDir = normal;
 
 		scattered = ray(point, scatterDir, inRay.getTime());
-		attenuation = m_albedo;
+		attenuation = m_albedo->getValue(u, v, point);
 		return true;
 	}
 
 public:
-	color m_albedo;
+	shared_ptr<texture> m_albedo;
 };
 
 class metal : public material {
@@ -34,7 +37,8 @@ public:
 	metal(const color& albedo, double fuzz) : m_albedo(albedo), m_reflectionFuzz(fuzz < 1.0 ? fuzz : 1.0) {}
 
 	virtual bool scatter(
-		const ray& inRay, const point3& point, const vec3& normal, const bool& isFrontFace, color& attenuation, ray& scattered
+		const ray& inRay, const point3& point, const vec3& normal,
+		const bool& isFrontFace, double u, double v, color& attenuation, ray& scattered
 	) const override {
 		vec3 reflected = reflect(unitVector(inRay.getDirection()), normal);
 		scattered = ray(point, reflected + m_reflectionFuzz * randomInUnitSphere(), inRay.getTime());
@@ -52,7 +56,8 @@ public:
 	dielectric(double refractionIndex) : m_refractionIndex(refractionIndex) {}
 
 	virtual bool scatter(
-		const ray& inRay, const point3& point, const vec3& normal, const bool& isFrontFace, color& attenuation, ray& scattered
+		const ray& inRay, const point3& point, const vec3& normal,
+		const bool& isFrontFace, double u, double v, color& attenuation, ray& scattered
 	) const override {
 		attenuation = color(1.0, 1.0, 1.0);
 		double refractionRatio = isFrontFace ? (1.0 / m_refractionIndex) : m_refractionIndex;

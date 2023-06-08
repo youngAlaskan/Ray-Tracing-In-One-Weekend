@@ -6,11 +6,15 @@
 #include "aabb.h"
 
 struct hitRecord {
+	// Object Information
 	point3 point;
 	vec3 normal;
 	shared_ptr<material> material_ptr;
 	double t = 0.0;
 	bool isFrontFace = true;
+	// Texture Coords
+	double u = 0.0;
+	double v = 0.0;
 
 	inline void setFaceNormal(const ray& ray, const vec3& outwardNormal) {
 		isFrontFace = dot(ray.getDirection(), outwardNormal) < 0.0;
