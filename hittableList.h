@@ -13,6 +13,7 @@ public:
 
 	void clear() { m_objects.clear(); }
 	void add(std::shared_ptr<hittable> object) { m_objects.push_back(object); }
+	inline std::vector<std::shared_ptr<hittable>> getObjects() const { return m_objects; }
 
 	virtual bool hit(
 		const ray& ray, double tMin, double tMax, hitRecord& record

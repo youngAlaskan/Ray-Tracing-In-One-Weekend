@@ -9,7 +9,7 @@
 
 class bvhNode : hittable {
 public:
-	bvhNode();
+	bvhNode() {}
 
 	bvhNode(shared_ptr<hittable> object, double startTime, double endTime) {
 		m_object = object;
@@ -38,7 +38,7 @@ public:
 bvhNode::bvhNode(
 	std::vector<shared_ptr<hittable>>& srcObjects, size_t start, size_t end, double startTime, double endTime
 ) {
-	auto objects = srcObjects;
+	std::vector<shared_ptr<hittable>> objects = srcObjects;
 
 	int axis = randomInt(0, 2);
 	auto comparator = (axis == 0) ? compareBoxX
@@ -94,17 +94,15 @@ bool bvhNode::getAABB(double startTime, double endTime, aabb& outputBox) const {
 
 class bvh {
 public:
-	bvh();
+	bvh() {}
 
 	bvh(bvhNode& node) : m_root(node) {}
 
-	bvh(
-		std::vector<shared_ptr<hittable>>& srcObjects, size_t start, size_t end, double startTime, double endTime
-	) : m_root(srcObjects, start, end, startTime, endTime) {}
+	bvh(std::vector<shared_ptr<hittable>>& srcObjects, size_t start, size_t end, double startTime, double endTime)
+		: m_root(srcObjects, start, end, startTime, endTime) {}
 
-	bvh(const hittableList list, double startTime, double endTime) {
-		m_root = bvhNode(list.m_objects, size_t(0), list.m_objects.size(), startTime, endTime)
-	}
+	bvh(const hittableList list, double startTime, double endTime)
+		: m_root(list.getObjects(), size_t(0), list.m_objects.size(), startTime, endTime) {}
 
 public:
 	bvhNode m_root;
