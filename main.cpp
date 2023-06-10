@@ -7,6 +7,7 @@
 #include "hittableList.h"
 #include "sphere.h"
 #include "movingSphere.h"
+#include "tm.h"
 
 #include <iostream>
 
@@ -21,7 +22,7 @@
 //     URL(book) : https ://raytracing.github.io/books/RayTracingTheNextWeek.html
 // ---------------------------------------------------------------------------------------
 //     Author : Daniel Young
-//     Version: Mar 23, 2023
+//     Version: Apr 9, 2023
 
 hittableList randomScene() {
     hittableList entities;
@@ -93,38 +94,74 @@ hittableList twoPerlinSpheres() {
     return entities;
 }
 
-color rayColor(const ray& r, const hittableList& entities, int depth) {
+hittableList earth() {
+    auto earthTex = make_shared<imageTexture>("earthmap.jpg");
+    auto earthSurface = make_shared<lambertian>(earthTex);
+    auto globe = make_shared<sphere>(point3(0.0, 0.0, 0.0), 2, earthSurface);
+
+    return hittableList(globe);
+}
+
+hittableList simpleLight() {
+    hittableList entities;
+
+    auto perlinTex = make_shared<perlinTexture>(4);
+    entities.add(make_shared<sphere>(point3(0.0, -1000.0, 0.0), 1000, make_shared<lambertian>(perlinTex)));
+    entities.add(make_shared<sphere>(point3(0.0, 2.0, 0.0), 2, make_shared<lambertian>(perlinTex)));
+
+    auto difflight = make_shared<diffuseLight>(color(4.0, 4.0, 4.0));
+    entities.add(make_shared<aaRectangle>(3, 5, 1, 3, -2, -2, difflight));
+    //entities.add(make_shared<sphere>(point3(0.0, 8.0, 0.0), 2, difflight));
+
+    return entities;
+}
+
+hittableList cornellBox() {
+    hittableList entities;
+
+    auto red = make_shared<lambertian>(color(0.65, 0.05, 0.05));
+    auto white = make_shared<lambertian>(color(0.73, 0.73, 0.73));
+    auto green = make_shared<lambertian>(color(0.12, 0.45, 0.15));
+    auto light = make_shared<diffuseLight>(color(15.0, 15.0, 15.0));
+
+    //entities.add(make_shared<aaRectangle>(555.0, 555.0, 0.0, 555.0, 0.0, 555.0, green));
+    //entities.add(make_shared<aaRectangle>(0.0, 0.0, 0.0, 555.0, 0.0, 555.0, red));
+    //entities.add(make_shared<aaRectangle>(213.0, 343, 554.0, 554.0, 227.0, 332, light));
+    //entities.add(make_shared<aaRectangle>(0.0, 555.0, 0.0, 0.0, 0.0, 555.0, white));
+    //entities.add(make_shared<aaRectangle>(0.0, 555.0, 555.0, 555.0, 0.0, 555.0, white));
+    //entities.add(make_shared<aaRectangle>(0.0, 555.0, 0.0, 555.0, 555.0, 555.0, white));
+
+    return entities;
+}
+
+color rayColor(const ray& r, const color& background, const hittableList& entities, int depth) {
     hitRecord record;
 
     // Base Case
     if (depth <= 0) return color(0.0, 0.0, 0.0);
 
-    if (entities.hit(r, 0.001, infinity, record)) {
-        ray scattered;
-        color attenuation;
-        if (record.material_ptr == nullptr) {
-            int q = 0;
-        }
-        if (record.material_ptr->scatter(r, record.point, record.normal,
-            record.isFrontFace, record.u, record.v, attenuation, scattered)) {
-            return attenuation * rayColor(scattered, entities, depth - 1);
-        }
-        return color(0.0, 0.0, 0.0);
-    }
+    // If the ray hits nothing, return the background color.
+    if (!entities.hit(r, 0.001, infinity, record))
+        return background;
 
-    vec3 unitDirection = unitVector(r.getDirection());
-    double t = 0.5 * (unitDirection.y() + 1.0);
-    return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+    ray scattered;
+    color attenuation;
+    color emitted = record.material_ptr->emitted(record.u, record.v, record.point);
+
+    if (!record.material_ptr->scatter(r, record.point, record.normal,
+        record.isFrontFace, record.u, record.v, attenuation, scattered))
+    { return emitted; }
+
+    return emitted + attenuation * rayColor(scattered, background, entities, depth - 1);
 }
 
 int main() {
 
     // Image
 
-    const double aspectRatio = 16.0 / 9.0;
-    const int imageWidth = 400;
-    const int imageHeight = static_cast<int>(double(imageWidth) / aspectRatio);
-    const int samplesPerPixel = 100;
+    double aspectRatio = 16.0 / 9.0;
+    int imageWidth = 400;
+    int samplesPerPixel = 100;
     const int maxDepth = 50;
 
     // Entities
@@ -135,10 +172,12 @@ int main() {
     point3 lookAt;
     double vFOV = 0.0;
     double aperture = 0.0;
+    color background(0.0, 0.0, 0.0);
 
-    switch (3) {
+    switch (6) {
     case 1:
         entities = randomScene();
+        background = color(0.70, 0.80, 1.00);
         lookFrom = point3(13.0, 2.0, 3.0);
         lookAt = point3(0.0, 0.0, 0.0);
         vFOV = 20.0;
@@ -146,17 +185,45 @@ int main() {
         break;
     case 2:
         entities = twoSpheres();
+        background = color(0.70, 0.80, 1.00);
         lookFrom = point3(13.0, 2.0, 3.0);
         lookAt = point3(0.0, 0.0, 0.0);
         vFOV = 20.0;
         break;
     case 3:
         entities = twoPerlinSpheres();
+        background = color(0.70, 0.80, 1.00);
         lookFrom = point3(13.0, 2.0, 3.0);
         lookAt = point3(0.0, 0.0, 0.0);
         vFOV = 20.0;
         break;
+    case 4:
+        entities = earth();
+        background = color(0.70, 0.80, 1.00);
+        lookFrom = point3(13.0, 2.0, 3.0);
+        lookAt = point3(0.0, 0.0, 0.0);
+        vFOV = 20.0;
+        break;
+    case 5:
+        entities = simpleLight();
+        samplesPerPixel = 400;
+        background = color(0.0, 0.0, 0.0);
+        lookFrom = point3(26.0, 3.0, 6.0);
+        lookAt = point3(0.0, 2.0, 0.0);
+        vFOV = 20.0;
+        break;
+    case 6:
+        entities = cornellBox();
+        aspectRatio = 1.0;
+        imageWidth = 600;
+        samplesPerPixel = 200;
+        background = color(0.0, 0.0, 0.0);
+        lookFrom = point3(278.0, 278.0, -800.0);
+        lookAt = point3(278.0, 278.0, 0.0);
+        vFOV = 40.0;
+        break;
     default:
+        background = color(0.0, 0.0, 0.0);
         break;
     }
     
@@ -164,6 +231,7 @@ int main() {
 
     vec3 vUp(0.0, 1.0, 0.0);
     double focusDistance = 10.0;
+    int imageHeight = static_cast<int>(double(imageWidth) / aspectRatio);
 
     camera camera(lookFrom, lookAt, vUp, vFOV, aspectRatio, aperture, focusDistance, 0.0, 1.0);
 
@@ -182,7 +250,7 @@ int main() {
                 double u = (double(column) + randomDouble()) / (imageWidth - 1);
                 double v = (double(row) + randomDouble()) / (imageHeight - 1);
                 ray r = camera.getRay(u, v);
-                pixelColor += rayColor(r, entities, maxDepth);
+                pixelColor += rayColor(r, background, entities, maxDepth);
             }
             writeColor(std::cout, pixelColor, samplesPerPixel);
         }

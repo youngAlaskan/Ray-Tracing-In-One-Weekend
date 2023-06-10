@@ -8,6 +8,10 @@ public:
 	virtual bool scatter(
 		const ray& inRay, const point3& point, const vec3& normal, const bool& isFrontFace, double u, double v, color& attenuation, ray& scattered
 	) const = 0;
+
+	virtual color emitted(double u, double v, const point3& p) const {
+		return color(0.0, 0.0, 0.0);
+	}
 };
 
 class lambertian : public material {
@@ -83,4 +87,22 @@ private:
 		r0 = r0 * r0;
 		return r0 + (1 - r0) * pow(1.0 - cosine, 5);
 	}
+};
+
+class diffuseLight : public material {
+public:
+	diffuseLight(shared_ptr<texture> albedo) : m_emit(albedo) {}
+	diffuseLight(color c) : m_emit(make_shared<solidColor>(c)) {}
+
+	virtual bool scatter(
+		const ray& inRay, const point3& point, const vec3& normal,
+		const bool& isFrontFace, double u, double v, color& attenuation, ray& scattered
+	) const override { return false; }
+
+	virtual color emitted(double u, double v, const point3& p) const override {
+		return m_emit->getValue(u, v, p);
+	}
+
+public:
+	shared_ptr<texture> m_emit;
 };

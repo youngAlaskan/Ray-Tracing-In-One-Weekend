@@ -55,3 +55,4 @@ inline double linearInterpolation(double a, double b, double fraction) {
 
 #include "ray.h"
 #include "vec3.h"
+#include "vec2.h"
