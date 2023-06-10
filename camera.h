@@ -36,11 +36,11 @@ public:
 
 	ray getRay(double s, double t) const {
 		vec3 rd = m_lensRadius * randomInUnitDisk();
-		vec3 offset = m_u * rd.x() + m_v * rd.y();
+		vec3 m_offset = m_u * rd.x() + m_v * rd.y();
 
 		return ray(
-			m_origin + offset,
-			m_lowerLeftCorner + s * m_horizontal + t * m_vertical - m_origin - offset,
+			m_origin + m_offset,
+			m_lowerLeftCorner + s * m_horizontal + t * m_vertical - m_origin - m_offset,
 			randomDouble(m_startTime, m_endTime)
 		);
 	}

@@ -3,6 +3,7 @@
 ################################################################################
 
 /x64/Debug
+/x64/Release
 /.vs
 /image.ppm
 /Ray-Tracing-In-One-Weekend.sln

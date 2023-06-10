@@ -15,8 +15,9 @@ struct vertex {
 		: m_location(location), m_normal(normal), m_texCoord(texCoord) {}
 };
 
-class triangle {
-public:
+struct triangle {
+	vertex* m_vertices;
+
 	triangle() : m_vertices(nullptr) {}
 
 	triangle(vertex v0, vertex v1, vertex v2) {
@@ -32,9 +33,6 @@ public:
 			m_vertices[i] = vertex(vertices[i], normals[i], texCoords[i]);
 		}
 	}
-
-public:
-	vertex* m_vertices;
 };
 
 class TriangleMesh : public hittable {
@@ -77,24 +75,24 @@ public:
 		if (m_z0 == m_z1) {
 			normal = unitVector(cross(vec3(m_x1 - m_x0, 0.0, 0.0), vec3(0.0, m_y1 - m_y0, 0.0)));
 
-			vertex lowL = vertex(v0, normal, vec2(0.0, 0.0));
-			vertex upL  = vertex(point3(m_x0, m_y1, m_z0), normal, vec2(0.0, 1.0));
-			vertex upR  = vertex(v1, normal, vec2(1.0, 1.0));
-			vertex lowR = vertex(point3(m_x1, m_y0, m_z0), normal, vec2(1.0, 0.0));
+			lowL = vertex(v0, normal, vec2(0.0, 0.0));
+			upL  = vertex(point3(m_x0, m_y1, m_z0), normal, vec2(0.0, 1.0));
+			upR  = vertex(v1, normal, vec2(1.0, 1.0));
+			lowR = vertex(point3(m_x1, m_y0, m_z0), normal, vec2(1.0, 0.0));
 		} else if (m_y0 == m_y1) {
 			normal = unitVector(cross(vec3(m_x1 - m_x0, 0.0, 0.0), vec3(0.0, 0.0, m_z1 - m_z0)));
 
-			vertex lowL = vertex(v0, normal, vec2(0.0, 0.0));
-			vertex upL  = vertex(point3(m_x0, m_y0, m_z0), normal, vec2(0.0, 1.0));
-			vertex upR  = vertex(v1, normal, vec2(1.0, 1.0));
-			vertex lowR = vertex(point3(m_x1, m_y0, m_z1), normal, vec2(1.0, 0.0));
+			lowL = vertex(v0, normal, vec2(0.0, 0.0));
+			upL  = vertex(point3(m_x0, m_y0, m_z1), normal, vec2(0.0, 1.0));
+			upR  = vertex(v1, normal, vec2(1.0, 1.0));
+			lowR = vertex(point3(m_x1, m_y0, m_z0), normal, vec2(1.0, 0.0));
 		} else {
 			normal = unitVector(cross(vec3(0.0, 0.0, m_z1 - m_z0), vec3(0.0, m_y1 - m_y0, 0.0)));
 
-			vertex lowL = vertex(v0, normal, vec2(0.0, 0.0));
-			vertex upL  = vertex(point3(m_x0, m_y1, m_z0), normal, vec2(0.0, 1.0));
-			vertex upR  = vertex(v1, normal, vec2(1.0, 1.0));
-			vertex lowR = vertex(point3(m_x0, m_y0, m_z1), normal, vec2(1.0, 0.0));
+			lowL = vertex(v0, normal, vec2(0.0, 0.0));
+			upL  = vertex(point3(m_x0, m_y1, m_z0), normal, vec2(0.0, 1.0));
+			upR  = vertex(v1, normal, vec2(1.0, 1.0));
+			lowR = vertex(point3(m_x0, m_y0, m_z1), normal, vec2(1.0, 0.0));
 		}
 
 		m_triangles[0] = triangle(lowL, upL, upR);
@@ -106,9 +104,14 @@ public:
 	virtual bool getAABB(double startTime, double endTime, aabb& outputBox) const override {
 		// The bounding box must have non-zero width in each dimension, so pad the Z
 		// dimension a small amount.
-		if (m_z0 == m_z1) { outputBox = aabb(point3(m_x0, m_y0, m_z0 - 0.0001), point3(m_x1, m_y1, m_z1 + 0.0001)); }
-		else if (m_y0 == m_y1) { outputBox = aabb(point3(m_x0, m_y0 - 0.0001, m_z0), point3(m_x1, m_y1 + 0.0001, m_z1)); }
-		else { outputBox = aabb(point3(m_x0 - 0.0001, m_y0, m_z0), point3(m_x1 + 0.0001, m_y1, m_z1)); }
+		if (m_z0 == m_z1) {
+			outputBox = aabb(point3(m_x0, m_y0, m_z0 - 0.0001), point3(m_x1, m_y1, m_z1 + 0.0001));
+		} else if (m_y0 == m_y1) {
+			outputBox = aabb(point3(m_x0, m_y0 - 0.0001, m_z0), point3(m_x1, m_y1 + 0.0001, m_z1));
+		} else {
+			outputBox = aabb(point3(m_x0 - 0.0001, m_y0, m_z0), point3(m_x1 + 0.0001, m_y1, m_z1));
+		}
+
 		return true;
 	}
 
@@ -117,24 +120,37 @@ public:
 };
 
 bool aaRectangle::hit(const ray& r, double t_min, double t_max, hitRecord& rec) const {
-	double t = (m_z0 - r.getOrigin().z()) / r.getDirection().z();
-	if (t < t_min || t > t_max) return false;
-
-	double x = r.getOrigin().x() + t * r.getDirection().x();
-	double y = r.getOrigin().y() + t * r.getDirection().y();
-	double z = r.getOrigin().z() + t * r.getDirection().z();
+	double t, x, y, z;
 
 	if (m_z0 == m_z1) {
+		t = (m_z0 - r.getOrigin().z()) / r.getDirection().z();
+		if (t < t_min || t > t_max) return false;
+
+		x = r.getOrigin().x() + t * r.getDirection().x();
+		y = r.getOrigin().y() + t * r.getDirection().y();
+
 		if (x < m_x0 || x > m_x1 || y < m_y0 || y > m_y1) return false;
 
 		rec.u = (x - m_x0) / (m_x1 - m_x0);
 		rec.v = (y - m_y0) / (m_y1 - m_y0);
 	} else if (m_y0 == m_y1) {
+		t = (m_y0 - r.getOrigin().y()) / r.getDirection().y();
+		if (t < t_min || t > t_max) return false;
+
+		x = r.getOrigin().x() + t * r.getDirection().x();
+		z = r.getOrigin().z() + t * r.getDirection().z();
+
 		if (x < m_x0 || x > m_x1 || z < m_z0 || z > m_z1) return false;
 
 		rec.u = (x - m_x0) / (m_x1 - m_x0);
 		rec.v = (z - m_z0) / (m_z1 - m_z0);
 	} else {
+		t = (m_x0 - r.getOrigin().x()) / r.getDirection().x();
+		if (t < t_min || t > t_max) return false;
+
+		y = r.getOrigin().y() + t * r.getDirection().y();
+		z = r.getOrigin().z() + t * r.getDirection().z();
+
 		if (y < m_y0 || y > m_y1 || z < m_z0 || z > m_z1) return false;
 
 		rec.u = (y - m_y0) / (m_y1 - m_y0);
@@ -143,7 +159,43 @@ bool aaRectangle::hit(const ray& r, double t_min, double t_max, hitRecord& rec) 
 
 	rec.t = t;
 	rec.setFaceNormal(r, m_triangles->m_vertices->m_normal);
-	rec.material_ptr = aaRectangle::m_material_ptr;
+	rec.material_ptr = m_material_ptr;
 	rec.point = r.resize(t);
 	return true;
+}
+
+class aaBox : public TriangleMesh {
+public:
+	aaBox() {}
+	aaBox(const point3& p0, const point3& p1, shared_ptr<material> mat_ptr);
+
+	virtual bool hit(const ray& ray, double tMin, double tMax, hitRecord& record) const override;
+
+	virtual bool getAABB(double startTime, double endTime, aabb& outputBox) const override {
+		outputBox = aabb(m_boxMin, m_boxMax);
+		return true;
+	}
+
+public:
+	point3 m_boxMin;
+	point3 m_boxMax;
+	hittableList m_sides;
+};
+
+aaBox::aaBox(const point3& p0, const point3& p1, shared_ptr<material> mat_ptr) {
+	m_boxMin = p0;
+	m_boxMax = p1;
+
+	m_sides.add(make_shared<aaRectangle>(p0 + vec3(0.0, 0.0, p1.z() - p0.z()), p1, mat_ptr));
+	m_sides.add(make_shared<aaRectangle>(p0, p1 - vec3(0.0, 0.0, p1.z() - p0.z()), mat_ptr));
+	
+	m_sides.add(make_shared<aaRectangle>(p0 + vec3(0.0, p1.y() - p0.y(), 0.0), p1, mat_ptr));
+	m_sides.add(make_shared<aaRectangle>(p0, p1 - vec3(0.0, p1.y() - p0.y(), 0.0), mat_ptr));
+	
+	m_sides.add(make_shared<aaRectangle>(p0 + vec3(p1.x() - p0.x(), 0.0, 0.0), p1, mat_ptr));
+	m_sides.add(make_shared<aaRectangle>(p0, p1 - vec3(p1.x() - p0.x(), 0.0, 0.0), mat_ptr));
+}
+
+bool aaBox::hit(const ray& r, double tMin, double tMax, hitRecord& record) const {
+	return m_sides.hit(r, tMin, tMax, record);
 }

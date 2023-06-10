@@ -110,7 +110,7 @@ hittableList simpleLight() {
     entities.add(make_shared<sphere>(point3(0.0, 2.0, 0.0), 2, make_shared<lambertian>(perlinTex)));
 
     auto difflight = make_shared<diffuseLight>(color(4.0, 4.0, 4.0));
-    entities.add(make_shared<aaRectangle>(3, 5, 1, 3, -2, -2, difflight));
+    entities.add(make_shared<aaRectangle>(point3(3.0, 1.0, -2.0), point3(5.0, 3.0, -2.0), difflight));
     //entities.add(make_shared<sphere>(point3(0.0, 8.0, 0.0), 2, difflight));
 
     return entities;
@@ -124,12 +124,23 @@ hittableList cornellBox() {
     auto green = make_shared<lambertian>(color(0.12, 0.45, 0.15));
     auto light = make_shared<diffuseLight>(color(15.0, 15.0, 15.0));
 
-    //entities.add(make_shared<aaRectangle>(555.0, 555.0, 0.0, 555.0, 0.0, 555.0, green));
-    //entities.add(make_shared<aaRectangle>(0.0, 0.0, 0.0, 555.0, 0.0, 555.0, red));
-    //entities.add(make_shared<aaRectangle>(213.0, 343, 554.0, 554.0, 227.0, 332, light));
-    //entities.add(make_shared<aaRectangle>(0.0, 555.0, 0.0, 0.0, 0.0, 555.0, white));
-    //entities.add(make_shared<aaRectangle>(0.0, 555.0, 555.0, 555.0, 0.0, 555.0, white));
-    //entities.add(make_shared<aaRectangle>(0.0, 555.0, 0.0, 555.0, 555.0, 555.0, white));
+    entities.add(make_shared<aaRectangle>(point3(213.0, 554.0, 227.0), point3(343.0, 554.0, 332.0), light));
+
+    entities.add(make_shared<aaRectangle>(point3(555.0, 0.0, 0.0), point3(555.0, 555.0, 555.0), green)); // Left
+    entities.add(make_shared<aaRectangle>(point3(0.0, 0.0, 0.0), point3(0.0, 555.0, 555.0), red)); //       Right
+    entities.add(make_shared<aaRectangle>(point3(0.0, 0.0, 0.0), point3(555.0, 0.0, 555.0), white));
+    entities.add(make_shared<aaRectangle>(point3(0.0, 555.0, 0.0), point3(555.0, 555.0, 555.0), white));
+    entities.add(make_shared<aaRectangle>(point3(0.0, 0.0, 555.0), point3(555.0, 555.0, 555.0), white));
+
+    shared_ptr<hittable> box1 = make_shared<aaBox>(point3(0.0, 0.0, 0.0), point3(165.0, 330.0, 165.0), white);
+    box1 = make_shared<pan>(box1, 15);
+    box1 = make_shared<translation>(box1, vec3(265.0, 0.0, 295.0));
+    entities.add(box1);
+
+    shared_ptr<hittable> box2 = make_shared<aaBox>(point3(0.0, 0.0, 0.0), point3(165.0, 165.0, 165.0), white);
+    box2 = make_shared<pan>(box2, -18);
+    box2 = make_shared<translation>(box2, vec3(130.0, 0.0, 65.0));
+    entities.add(box2);
 
     return entities;
 }
