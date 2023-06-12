@@ -38,7 +38,7 @@ public:
 
 class metal : public material {
 public:
-	metal(const color& albedo, double fuzz) : m_albedo(albedo), m_reflectionFuzz(fuzz < 1.0 ? fuzz : 1.0) {}
+	metal(const color& albedo, double roughness) : m_albedo(albedo), m_reflectionFuzz(roughness < 1.0 ? roughness : 1.0) {}
 
 	virtual bool scatter(
 		const ray& inRay, const point3& point, const vec3& normal,
